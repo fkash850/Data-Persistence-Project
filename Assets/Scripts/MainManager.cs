@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,22 +11,30 @@ public class MainManager : MonoBehaviour
     public int LineCount = 6;
     public Rigidbody Ball;
 
+    private string player;
     public Text ScoreText;
-    public GameObject GameOverText;
+    public GameObject gameOver;
     
     private bool m_Started = false;
     private int m_Points;
     
-    private bool m_GameOver = false;
+    public bool m_GameOver = false;
 
-    
+    private void Awake()
+    {
+        MenuManager.Instance.LoadPlayer();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
+
+        player = MenuManager.Instance.CurrentPlayer;
+        ScoreText.text = $"Player: {player} Score: 0";
         
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
+        int[] pointCountArray = new [] {1, 1, 2, 2, 5, 5};
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -53,24 +62,26 @@ public class MainManager : MonoBehaviour
                 Ball.AddForce(forceDir * 2.0f, ForceMode.VelocityChange);
             }
         }
-        else if (m_GameOver)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
-        }
     }
 
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"Player: {player} Score: {m_Points}";
     }
 
     public void GameOver()
     {
+        if (m_Points > MenuManager.Instance.HighScore)
+        {
+            MenuManager.Instance.SavePlayer(player, player, m_Points);
+        }
+        else
+        {
+            MenuManager.Instance.SavePlayer(player);
+        }
+
         m_GameOver = true;
-        GameOverText.SetActive(true);
+        gameOver.SetActive(true);
     }
 }
